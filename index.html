@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Work Calendar</title>
+  <link rel="stylesheet" href="design.css">
+
+</head>
+<body>
+
+  <div>
+    <h2>Add Work Calendar</h2>
+    <form id="workCalendarForm" onsubmit="submitForm(event)">
+      <div class="form-check">
+        <input type="checkbox" id="halfDayOption" onchange="toggleHalfDayOption()">
+        <label for="halfDayOption">Half working day & half weekend</label>
+      </div>
+
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>Day</th>
+            <th>All</th>
+            <th>1st</th>
+            <th>2nd</th>
+            <th>3rd</th>
+            <th>4th</th>
+            <th>5th</th>
+          </tr>
+        </thead>
+        <tbody id="calendarTable">
+        </tbody>
+      </table>
+
+      <button type="submit" class="btn btn-primary">Save</button>
+    </form>
+  </div>
+
+  <!-- JavaScript goes here inside the <script> tag -->
+  <script>
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const columns = ['All', '1st', '2nd', '3rd', '4th', '5th'];
+    const formData = days.map(() => {
+      return columns.reduce((acc, col) => {
+        acc[col] = { checked: false, selected: 'full' };
+        return acc;
+      }, {});
+    });
+
+    function loadTable() {
+      const tableBody = document.getElementById('calendarTable');
+      tableBody.innerHTML = ''; // Clear the table body
+      formData.forEach((row, rowIndex) => {
+        const tr = document.createElement('tr');
+        const dayCell = document.createElement('td');
+        dayCell.textContent = days[rowIndex];
+        tr.appendChild(dayCell);
+
+        columns.forEach((col) => {
+          const td = document.createElement('td');
+          const div = document.createElement('div');
+          div.classList.add('d-flex', 'align-items-center');
+
+          if (col === 'All') {
+            const allCheckbox = document.createElement('input');
+            allCheckbox.type = 'checkbox';
+            allCheckbox.checked = allChecked(rowIndex);
+            allCheckbox.onchange = (e) => toggleAll(rowIndex, e.target.checked);
+            div.appendChild(allCheckbox);
+          } else {
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = formData[rowIndex][col].checked;
+            checkbox.onchange = () => checkIfAllUnchecked(rowIndex);
+            div.appendChild(checkbox);
+
+            const select = document.createElement('select');
+            select.classList.add('form-control', 'ml-2');
+            select.style.display = halfDayOptionChecked() ? 'inline-block' : 'none';
+            select.innerHTML = `
+              <option value="full">Full Day</option>
+              <option value="first-half">1st Half</option>
+              <option value="second-half">2nd Half</option>
+            `;
+            select.value = formData[rowIndex][col].selected;
+            select.onchange = (e) => formData[rowIndex][col].selected = e.target.value;
+            div.appendChild(select);
+          }
+
+          td.appendChild(div);
+          tr.appendChild(td);
+        });
+
+        tableBody.appendChild(tr);
+      });
+    }
+
+    function toggleHalfDayOption() {
+      loadTable(); // Re-render the table when the halfDayOption is toggled
+    }
+
+    function halfDayOptionChecked() {
+      return document.getElementById('halfDayOption').checked;
+    }
+
+    function allChecked(rowIndex) {
+      return columns.slice(1).every(col => formData[rowIndex][col].checked);
+    }
+
+    function toggleAll(rowIndex, isChecked) {
+      columns.slice(1).forEach(col => {
+        formData[rowIndex][col].checked = isChecked;
+      });
+      loadTable(); // Re-render to reflect the changes
+    }
+
+    function checkIfAllUnchecked(rowIndex) {
+      const allCheckedStatus = allChecked(rowIndex);
+      formData[rowIndex]['All'].checked = allCheckedStatus;
+      loadTable(); // Re-render to reflect the changes
+    }
+
+    function submitForm(event) {
+      event.preventDefault();
+      console.log('Form data:', formData);
+      alert('Form submitted. Check the console for details.');
+    }
+
+    // Load the table when the page is loaded
+    window.onload = loadTable;
+  </script>
+</body>
+</html>
